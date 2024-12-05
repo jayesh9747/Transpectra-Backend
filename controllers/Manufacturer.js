@@ -13,9 +13,10 @@ const getAllManufacturers = async (req, res) => {
       .select("companyName companyAddress companyArea companyDescription companyImage");
     
     if (!manufacturers || manufacturers.length === 0) {
-      return res.status(404).json({
-        success: false,
+      return res.status(200).json({
+        success: true,
         message: "No manufacturers found.",
+        manufacturers : []
       });
     }
     return res.status(200).json({

@@ -195,7 +195,7 @@ exports.getFleetDeparted = async (req, res) => {
     if (!yards.length) {
       return res
         .status(200)
-        .json(msgFunction(false, "No yards found for this warehouse.", []));
+        .json(msgFunction(true, "No yards found for this warehouse.", []));
     }
 
     const yardIds = yards.map((yard) => yard._id);
