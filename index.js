@@ -33,10 +33,11 @@ app.use(cookieParser());
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(
     cors({
-        origin: '*',
+        origin: process.env.CLIENT,
         credentials: true,
     })
-);
+)
+console.log('Allowed Origin:', process.env.CLIENT);
 // app.use(
 //     fileUpload({
 //         useTempFiles: true,
@@ -67,7 +68,7 @@ const fleetRoutes = require('./routes/fleet')
 const OrderRoutes = require('./routes/Order');
 const DeliveryRoutes = require('./routes/delivery');
 const inventoryRoutes = require('./routes/inventory');
-const pdfRoutes = require('./routes/pdf');
+const pdfRoutes=require('./routes/pdf');
 // const OrderedProductsRoutes = require('./routes/OrderedProductsRoutes')
 // const OrderRequestRoute = require('./routes/OrderRequestRoute')
 const ManufacturerFetchRoute = require('./routes/Manufacturer')
@@ -82,7 +83,7 @@ app.get("/", (req, res) => {
 })
 
 app.get('/carbon', async (req, res) => {
-    const result = await getCarbonEmission('1823.3', 100);
+    const result = await getCarbonEmission('1823.3',100);
 
     console.log("this is result of ", result.data)
 
