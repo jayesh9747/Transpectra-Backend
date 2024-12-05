@@ -11,6 +11,7 @@ const {
     fetchInProgressDeliveriesByDriver,
     VerifyQRAndCompleteDelivery,
     startDelivery,
+    FetchDriver
 } = require("../controllers/driver");
 const { isDriver } = require("../middleware/auth");
 const { verifyDriver, verifyVehicle } = require("../controllers/driver");
@@ -30,6 +31,8 @@ router.post(endpoints.ACCEPT_REJECT_DELIVERY, isDriver, ChooseDelivery);
 router.post("/verify/sarthi", auth, verifyDriver);
 router.post("/verify/vahan", auth, verifyVehicle);
 router.post("/complete/delivery", auth, VerifyQRAndCompleteDelivery);
+router.get('/',auth,FetchDriver);
+
 
 /**
  * 

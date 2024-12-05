@@ -21,45 +21,43 @@ const { CONFIG } = require('../constants/config');
 // check karna bacha hai 
 exports.FetchDriver = async (req, res) => {
     try {
+        const { id : driverId } = req.user;
 
-        const dsId = req.store.id;
-        console.log(dsId);
-
-        if (!dsId) {
-            return res.json(msgFunction(false, "Distribution Center field is required"));
+        // Validate that driverId is provided
+        if (!driverId || !mongoose.Types.ObjectId.isValid(driverId)) {
+            return res.status(400).json({
+                success: false,
+                message: "Valid Driver ID is required",
+            });
         }
 
-        console.log(dsId)
+        // Fetch the driver details and populate necessary fields
+        const driver = await User.findById(driverId)
+            .populate("additionalDetails", "-__v") 
+            .populate("LinkedManufacturingUnitID", "name address")
 
-        const DC = await distribution_center.findById(dsId);
-
-        if (!DC) {
-            return res.json(msgFunction(false, "Distribution Center Not found"));
+        // If the driver is not found
+        if (!driver) {
+            return res.status(404).json({
+                success: false,
+                message: "Driver not found",
+            });
         }
 
-        const { status } = req.query;
-
-        const statusOrder = ['assigned', 'onDelivery', 'available'];
-
-        let filter = { _id: dsId };
-        if (status && statusOrder.includes(status)) {
-            filter.status = status;
-        }
-
-        console.log("filter", filter);
-
-        const allAvailableDriver = available_driver.find(filter);
-
+        // Return the driver's details
         return res.status(200).json({
             success: true,
-            data: allAvailableDriver,
-        })
-
+            data: driver,
+        });
     } catch (error) {
-        console.log(error)
-        return res.status(500).json(msgFunction(false, JSON.stringify(error.message)))
+        console.error("Error fetching driver details:", error);
+        return res.status(500).json({
+            success: false,
+            message: error.message,
+        });
     }
-}
+};
+
 
 
 //  check karna  bachha hai 

@@ -27,17 +27,33 @@ const cors = require("cors") //backend should entertain frontend's request
 const { cloudinaryConnect } = require("./config/cloudinary")
 //const fileUpload = require("express-fileupload")
 
+const allowedOrigins = [
+    process.env.DEVCLIENT,
+    process.env.PRODUCTIONCLIENT
+];
+
+
 // Middlewares
 app.use(express.json());
 app.use(cookieParser());
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(
     cors({
-        origin: process.env.CLIENT,
+        origin: function (origin, callback) {
+            if (!origin || allowedOrigins.includes(origin)) {
+                callback(null, true);
+            } else {
+                callback(new Error('Not allowed by CORS'));
+            }
+        },
         credentials: true,
     })
-)
-console.log('Allowed Origin:', process.env.CLIENT);
+);
+
+for(i in allowedOrigins ){
+    console.log('Allowed Origin:', allowedOrigins[i]);
+}
+
 
 app.use((req, res, next) => {
     console.log(`Incoming Request: ${req.method} ${req.originalUrl}`);

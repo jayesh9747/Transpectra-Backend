@@ -190,7 +190,7 @@ exports.login = async (req, res) => {
 
 
         let storeToken = null;
-        if (user.accountType === 'Store_managers') {
+        if (user?.accountType === 'Store_managers') {
             const store = await Store.findOne({ managerId: user._id });
             if (store) {
                 storeToken = jwt.sign(
@@ -201,7 +201,9 @@ exports.login = async (req, res) => {
             }
         }
 
-        if (user.accountType === CONFIG.ACCOUNT_TYPE.DISTRIBUTION_CENTER) {
+        console.log(user)
+
+        if (user?.accountType === CONFIG.ACCOUNT_TYPE.DISTRIBUTION_CENTER) {
             const dis_center = await DistributionCenter.findOne({ 'contactInfo.managerId': user._id });
             if (dis_center) {
                 storeToken = jwt.sign(
@@ -237,7 +239,7 @@ exports.login = async (req, res) => {
             const options = {
                 expires: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
                 httpOnly: true,
-                secure: false,
+                secure: true,
                 sameSite: 'None',
             }
 
