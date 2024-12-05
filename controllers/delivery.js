@@ -511,9 +511,10 @@ exports.getWarehouseDetails = async (req, res) => {
     // Extract linked orders
     const linkedOrders = warehouse.linkedOrders;
     if (!linkedOrders || linkedOrders.length === 0) {
-      return res.status(404).json({
-        success: false,
+      return res.status(200).json({
+        success: true,
         message: "No linked orders found for this warehouse.",
+        data:[]
       });
     }
 

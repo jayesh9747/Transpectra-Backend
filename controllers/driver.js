@@ -277,26 +277,26 @@ exports.VerifyQRAndCompleteDelivery = async (req, res) => {
         }
 
         // Process products in the delivery
-        for (const deliveredProduct of deliveryDetails.products) {
-            const { productId, quantity } = deliveredProduct;
+        // for (const deliveredProduct of deliveryDetails.products) {
+        //     const { productId, quantity } = deliveredProduct;
 
-            // Find the product in the Product model
-            const product = await Product.findOne({
-                _id: productId,
-                warehouse: warehouseId
-            });
+        //     // Find the product in the Product model
+        //     const product = await Product.findOne({
+        //         _id: productId,
+        //         warehouse: warehouseId
+        //     });
 
-            if (!product) {
-                return res.status(404).json({
-                    success: false,
-                    message: `Product with ID ${productId} not found in warehouse ${warehouseId}.`
-                });
-            }
+        //     if (!product) {
+        //         return res.status(404).json({
+        //             success: false,
+        //             message: `Product with ID ${productId} not found in warehouse ${warehouseId}.`
+        //         });
+        //     }
 
-            // Increment the product quantity in the Product model
-            product.productQuantity += quantity; // Increment product quantity by delivered quantity
-            await product.save();
-        }
+        //     // Increment the product quantity in the Product model
+        //     product.productQuantity += quantity; // Increment product quantity by delivered quantity
+        //     await product.save();
+        // }
 
         // Update delivery details
         deliveryDetails.status = "Completed";
