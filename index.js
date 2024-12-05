@@ -38,13 +38,25 @@ app.use(
     })
 )
 console.log('Allowed Origin:', process.env.CLIENT);
-// app.use(
-//     fileUpload({
-//         useTempFiles: true,
-//         tempFileDir: "/uploads/",
-//         limits: { fileSize: 20 * 1024 * 1024 },
-//     })
-// )
+
+app.use((req, res, next) => {
+    console.log(`Incoming Request: ${req.method} ${req.originalUrl}`);
+    console.log(`Headers: ${JSON.stringify(req.headers)}`);
+    console.log(`Body: ${JSON.stringify(req.body)}`);
+    console.log(`Query: ${JSON.stringify(req.query)}`);
+
+    // Capture the response before sending it
+    const originalSend = res.send;
+    res.send = function (body) {
+        console.log(`Response: ${body}`);
+        res.send = originalSend; // Reset to the original 'send' method
+        return res.send(body); // Actually send the response
+    };
+
+    next(); // Move to the next middleware
+});
+
+
 const fs = require("fs");
 const uploadDir = path.join(__dirname, "uploads");
 if (!fs.existsSync(uploadDir)) {
@@ -68,7 +80,7 @@ const fleetRoutes = require('./routes/fleet')
 const OrderRoutes = require('./routes/Order');
 const DeliveryRoutes = require('./routes/delivery');
 const inventoryRoutes = require('./routes/inventory');
-const pdfRoutes=require('./routes/pdf');
+const pdfRoutes = require('./routes/pdf');
 // const OrderedProductsRoutes = require('./routes/OrderedProductsRoutes')
 // const OrderRequestRoute = require('./routes/OrderRequestRoute')
 const ManufacturerFetchRoute = require('./routes/Manufacturer')
@@ -83,7 +95,7 @@ app.get("/", (req, res) => {
 })
 
 app.get('/carbon', async (req, res) => {
-    const result = await getCarbonEmission('1823.3',100);
+    const result = await getCarbonEmission('1823.3', 100);
 
     console.log("this is result of ", result.data)
 
