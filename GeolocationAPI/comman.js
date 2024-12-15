@@ -39,12 +39,14 @@ const getCoordinates = async (address) => {
 };
 
 
-const getRoute = async (startAddress, endAddress) => {
+const getRoute = async (startAddress, endAddress) => {    
+    const { lat: startlat, lon: startlon } = startAddress;
+    const { lat: endlat, lon: endlon } = endAddress;
     const url = `${CONFIG.GEOAPIFY.BASE_URL}/v1/routing`;
 
     const params = {
         apiKey: CONFIG.GEOAPIFY.API_KEY,
-        waypoints: `${startAddress}|${endAddress}`, // waypoints format: "lat1,lon1|lat2,lon2"
+        waypoints: `${startlat},${startlon}|${endlat},${endlon}`, // waypoints format: "lat1,lon1|lat2,lon2"
         mode: 'truck',
         units: 'imperial',
     };

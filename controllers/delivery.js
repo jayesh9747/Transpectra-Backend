@@ -14,7 +14,7 @@ const path = require("path");
 const fs = require("fs");
 const { DistanceBWAddress } = require("../GeolocationAPI/api");
 const { getCarbonEmissionDetails, getCarbonEmission } = require("../UlipAPI/carbonEmissionapi");
-const { getCoordinates } = require('../GeolocationAPI/comman')
+const { getOptimizedRoutes } = require('../AIModelAPI/api')
 
 exports.generateRoutesForDelivery = async (req, res) => {
   try {
@@ -64,14 +64,29 @@ exports.generateRoutesForDelivery = async (req, res) => {
       contactNumber: warehouse.contactNumber,
     };
 
+    console.log(pickupLocation, dropoffLocation);
+
     // Step 5: Calculate Distance and Time
-    const { distance, time } = await DistanceBWAddress(
+    const result = await DistanceBWAddress(
       pickupLocation.address,
       dropoffLocation.address
     );
 
+    console.log("this is distance b/w address******", result);
+
+    const distance = `${result.distance} ${result.distance_units}`;
+    const time = `${result.time}`;
+
     // Step 6: Get Carbon Emission Details
     const carbonEmissionObject = await getCarbonEmission(distance, weight, 1);
+
+    const inputData = {
+      source: pickupLocation.address,
+      destination: dropoffLocation.address
+    }
+
+    const routes = await getOptimizedRoutes(inputData);
+    
 
     // Step 7: Construct Response Object
     const responseObj = {
@@ -97,60 +112,6 @@ exports.generateRoutesForDelivery = async (req, res) => {
     });
   }
 }
-
-exports.realTimeTrackingOfDelivery = async (req, res) => {
-  try {
-    const { deliveryId } = req.body;
-
-    const deliveryObj = await Delivery.findOne({ uniqueDeliveryId: deliveryId });
-
-    if (!deliveryObj) {
-      return res.status(404).json({ message: "Delivery not found" });
-    }
-
-    const deliveryRoutes = deliveryObj.deliveryRoutes.map(route => ({
-      step: route.step,
-      from: route.from,
-      to: route.to,
-      transportMode: route.by,
-      distance: route.distance,
-      expectedTime: route.expectedTime,
-      cost: route.cost,
-      remarks: route.remarks,
-      status: route.status
-    }));
-
-    const ongoingRoute = deliveryRoutes.find(route => route.status === "Ongoing");
-
-    let routeDetails = null;
-    if (ongoingRoute) {
-      const fromCoordinatesResponse = await getCoordinates(ongoingRoute.from);
-      const toCoordinatesResponse = await getCoordinates(ongoingRoute.to);
-
-      if (fromCoordinatesResponse.success && toCoordinatesResponse.success) {
-        routeDetails = await getRoute(fromCoordinatesResponse.data, toCoordinatesResponse.data);
-      } else {
-        return res.status(400).json({
-          message: "Unable to fetch coordinates for the ongoing route."
-        });
-      }
-    }
-
-    return res.status(200).json({
-      deliveryId: deliveryObj.uniqueDeliveryId,
-      currentLocation: deliveryObj.currentLocation,
-      status: deliveryObj.status,
-      routes: deliveryRoutes,
-      ongoingStep: ongoingRoute || null,
-      routeDetails: routeDetails?.data || null
-    });
-  } catch (error) {
-    console.error("Error tracking delivery:", error);
-    return res.status(500).json({ message: "Internal Server Error" });
-  }
-};
-
-
 
 
 exports.FetchDelivery = async (req, res) => {
@@ -332,7 +293,7 @@ exports.CreateDelivery = async (req, res) => {
         const { _id, ...rest } = product; // Destructure to exclude _id
         return { ...rest, productId: _id }; // Add productId
       });
-  
+
 
 
       const convertedProducts = updatedProducts.map((product) => ({
@@ -514,7 +475,7 @@ exports.getWarehouseDetails = async (req, res) => {
       return res.status(200).json({
         success: true,
         message: "No linked orders found for this warehouse.",
-        data:[]
+        data: []
       });
     }
 

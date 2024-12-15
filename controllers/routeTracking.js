@@ -1,5 +1,6 @@
 const RouteTracking = require("../models/routeTracking");
 const Delivery = require("../models/Delivery");
+const { getCoordinates, getRoute } = require('../GeolocationAPI/comman')
 
 exports.updateRouteTracking = async (req, res) => {
     const { deliveryId, driverId, fnrNumber, awbNumber, interfaceName, igmNumber, to, from, status } = req.body;
@@ -82,3 +83,76 @@ exports.updateRouteTracking = async (req, res) => {
         });
     }
 };
+
+
+exports.realTimeTrackingOfDelivery = async (req, res) => {
+    try {
+        const { deliveryId } = req.body;
+
+        const deliveryObj = await Delivery.findOne({ uniqueDeliveryId: deliveryId });
+
+        if (!deliveryObj) {
+            return res.status(404).json({ message: "Delivery not found" });
+        }
+
+        const deliveryRoutes = deliveryObj.deliveryRoutes.map(route => ({
+            step: route?.step,
+            from: route?.from,
+            to: route?.to,
+            transportMode: route?.by,
+            distance: route?.distance,
+            expectedTime: route?.expectedTime,
+            cost: route?.cost,
+            remarks: `${route?.from} to ${route?.to} going via ${route?.by}.`,
+            status: route?.status
+        }));
+
+        const ongoingRoute = deliveryRoutes.find(route => route.status === "in-progress");
+
+        let routeDetails = {
+            success: false,
+            data: null,
+            message: ""
+        };
+
+        if (ongoingRoute) {
+            switch (ongoingRoute?.transportMode) {
+                case "road":
+                    const fromCoordinatesResponse = await getCoordinates(ongoingRoute.from);
+                    const toCoordinatesResponse = await getCoordinates(ongoingRoute.to);
+
+                    if (fromCoordinatesResponse.success && toCoordinatesResponse.success) {
+                        routeDetails = await getRoute(fromCoordinatesResponse.data, toCoordinatesResponse.data);
+                        
+                    } else {
+                        routeDetails['success'] = false;
+                        routeDetails["message"] = "Unable to fetch coordinates for the ongoing road route."
+                    }
+                    break;
+
+                case "rail":
+                case "air":
+                case "sea":
+                default:
+                    routeDetails['success'] = false;
+                    routeDetails["message"] = "Invalid transport mode or transport mode not supported."
+            }
+        } else {
+            routeDetails.success = false;
+            routeDetails.message = "No ongoing route provided.";
+        }
+
+        return res.status(200).json({
+            deliveryId: deliveryObj.uniqueDeliveryId,
+            currentLocation: deliveryObj.currentLocation,
+            status: deliveryObj.status,
+            routes: deliveryRoutes,
+            ongoingStep: ongoingRoute || null,
+            routeDetails
+        });
+    } catch (error) {
+        console.error("Error tracking delivery:", error);
+        return res.status(500).json({ message: "Internal Server Error" });
+    }
+};
+

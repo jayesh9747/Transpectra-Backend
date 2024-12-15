@@ -58,7 +58,13 @@ const DeliverySchema = new mongoose.Schema({
             distance: { type: Number, required: true }, // Distance in kilometers
             expectedTime: { type: String, required: true }, // Expected time in hours
             cost: { type: Number, required: true },
-            remarks: { type: String }
+            remarks: { type: String },
+            status : {
+                type : String,
+                enum : ['pending', 'in-progress', 'completed', 'delayed'],
+                default : "pending",
+                required: true
+            }
         }
     ],
     overallTripCost: { type: Number, default: 0 }, // Total cost of the trip
